@@ -19,6 +19,14 @@ enum Commands {
         #[arg(value_name = "WALLET_NAME")]
         wallet: String,
     },
+    New {
+        #[arg(value_name = "WALLET_NAME")]
+        wallet: String,
+    },
+    Rm {
+        #[arg(value_name = "WALLET_NAME")]
+        wallet: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -27,6 +35,8 @@ fn main() -> Result<()> {
     match cli.command {
         Commands::Ls => wallet::list_wallets()?,
         Commands::Set { wallet } => wallet::set_wallet(&wallet)?,
+        Commands::New { wallet } => wallet::generate_wallet(&wallet)?,
+        Commands::Rm { wallet } => wallet::remove_wallet(&wallet)?,
     }
 
     Ok(())
