@@ -33,6 +33,10 @@ enum Commands {
         #[arg(value_name = "NEW_WALLET_NAME")]
         new_wallet: String,
     },
+    Balance {
+        #[arg(value_name = "WALLET_NAME")]
+        wallet: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -47,6 +51,7 @@ fn main() -> Result<()> {
             old_wallet,
             new_wallet,
         } => wallet::rename_wallet(&old_wallet, &new_wallet)?,
+        Commands::Balance { wallet } => wallet::get_balance(wallet.as_deref())?,
     }
 
     Ok(())
