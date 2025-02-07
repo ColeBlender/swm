@@ -14,7 +14,11 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Ls, // list all available wallets
+    Ls,
+    Set {
+        #[arg(value_name = "WALLET_NAME")]
+        wallet: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -22,6 +26,7 @@ fn main() -> Result<()> {
 
     match cli.command {
         Commands::Ls => wallet::list_wallets()?,
+        Commands::Set { wallet } => wallet::set_wallet(&wallet)?,
     }
 
     Ok(())
