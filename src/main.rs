@@ -27,6 +27,12 @@ enum Commands {
         #[arg(value_name = "WALLET_NAME")]
         wallet: String,
     },
+    Rename {
+        #[arg(value_name = "OLD_WALLET_NAME")]
+        old_wallet: String,
+        #[arg(value_name = "NEW_WALLET_NAME")]
+        new_wallet: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -37,6 +43,10 @@ fn main() -> Result<()> {
         Commands::Set { wallet } => wallet::set_wallet(&wallet)?,
         Commands::New { wallet } => wallet::generate_wallet(&wallet)?,
         Commands::Rm { wallet } => wallet::remove_wallet(&wallet)?,
+        Commands::Rename {
+            old_wallet,
+            new_wallet,
+        } => wallet::rename_wallet(&old_wallet, &new_wallet)?,
     }
 
     Ok(())

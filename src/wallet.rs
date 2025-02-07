@@ -248,4 +248,67 @@ pub fn remove_wallet(wallet_name: &str) -> Result<()> {
     Ok(())
 }
 
-// add rename wallet, balance
+pub fn rename_wallet(old_wallet: &str, new_wallet: &str) -> Result<()> {
+    let wallet_dir = dirs::home_dir()
+        .map(|p| p.join(".config/solana"))
+        .ok_or_else(|| anyhow!("Could not determine home directory"))?;
+
+    let old_wallet_path = wallet_dir.join(format!("{}.json", old_wallet));
+    if !old_wallet_path.exists() {
+        println!(
+            "\x1b[31mWallet \x1b[38;5;208m'{}'\x1b[31m does not exist in ~/.config/solana/\x1b[0m",
+            old_wallet
+        );
+        println!("\nYour wallets:");
+        list_wallets()?;
+        return Ok(());
+    }
+
+    let new_wallet_path = wallet_dir.join(format!("{}.json", new_wallet));
+    if new_wallet_path.exists() {
+        println!(
+            "\x1b[31mA wallet with the name \x1b[38;5;208m'{}'\x1b[31m already exists\x1b[0m",
+            new_wallet
+        );
+        return Ok(());
+    }
+
+    fs::rename(&old_wallet_path, &new_wallet_path)?;
+    println!(
+        "\x1b[32mWallet '{}' successfully renamed to '{}'\x1b[0m",
+        old_wallet, new_wallet
+    );
+
+    let output = run_solana_command(&["config", "get"])?;
+    let config_output = String::from_utf8_lossy(&output.stdout);
+    let active_wallet = config_output
+        .lines()
+        .find(|line| line.contains("Keypair Path"))
+        .and_then(|line| line.split(':').nth(1))
+        .and_then(|path_str| {
+            let trimmed = path_str.trim();
+            Path::new(trimmed)
+                .file_stem()
+                .map(|s| s.to_string_lossy().to_string())
+        });
+
+    if let Some(active) = active_wallet {
+        if active == old_wallet {
+            let new_wallet_path_str = new_wallet_path
+                .to_str()
+                .ok_or_else(|| anyhow!("Invalid new wallet path"))?;
+            let update_output =
+                run_solana_command(&["config", "set", "--keypair", new_wallet_path_str])?;
+            if update_output.status.success() {
+                println!("Active wallet updated to \x1b[36m'{}'\x1b[0m", new_wallet);
+            } else {
+                println!("\x1b[31mFailed to update active wallet in config\x1b[0m");
+                println!("Error: {}", String::from_utf8_lossy(&update_output.stderr));
+            }
+        }
+    }
+
+    Ok(())
+}
+
+// balance
