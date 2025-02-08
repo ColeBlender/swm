@@ -2,6 +2,16 @@
 name = "swm"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "A blazing fast, modern, and easy-to-use CLI for managing multiple Solana wallets."
+authors = ["Cole Blender (@ColeBlender)"]
+repository = "https://github.com/ColeBlender/swm"
+documentation = "https://docs.rs/swm"
+readme = "README.md"
+homepage = "https://github.com/ColeBlender/swm"
+keywords = ["cli", "rust", "solana", "wallet", "web3"]
+categories = ["command-line-utilities", "cryptography", "finance", "network-programming", "development-tools"]
+
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }

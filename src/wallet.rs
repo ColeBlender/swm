@@ -176,9 +176,9 @@ pub fn remove_wallet(wallet_name: &str) -> Result<()> {
         .to_string();
 
     println!(
-      "\x1b[31mWARNING:\x1b[0m You are about to permanently delete wallet \x1b[38;5;208m'{}'\x1b[0m",
-      wallet_name
-  );
+        "\x1b[31mWARNING:\x1b[0m You are about to permanently delete wallet \x1b[38;5;208m'{}'\x1b[0m",
+        wallet_name
+    );
     println!("This wallet has a balance of {}", balance);
     println!("This action cannot be undone and any funds associated with this wallet may be lost forever");
     print!("Type 'remove' to confirm: ");
@@ -321,9 +321,9 @@ pub fn get_balance(wallet: Option<&str>) -> Result<()> {
             let wallet_path = wallet_dir.join(format!("{}.json", wallet_name));
             if !wallet_path.exists() {
                 println!(
-                  "\x1b[31mWallet \x1b[38;5;208m'{}'\x1b[31m does not exist in ~/.config/solana/\x1b[0m",
-                  wallet_name
-              );
+                    "\x1b[31mWallet \x1b[38;5;208m'{}'\x1b[31m does not exist in ~/.config/solana/\x1b[0m",
+                    wallet_name
+                );
                 crate::wallet::list_wallets()?;
                 return Ok(());
             }
@@ -369,6 +369,66 @@ pub fn get_balance(wallet: Option<&str>) -> Result<()> {
             "\x1b[31mFailed to retrieve balance.\x1b[0m\nError: {}",
             String::from_utf8_lossy(&balance_output.stderr)
         );
+    }
+
+    Ok(())
+}
+
+pub fn get_public_key(wallet: Option<&str>) -> Result<()> {
+    // Determine the keypair file path and wallet name.
+    let (wallet_path_str, wallet_name) = match wallet {
+        Some(wallet_name) => {
+            let wallet_dir = dirs::home_dir()
+                .map(|p| p.join(".config/solana"))
+                .ok_or_else(|| anyhow!("Could not determine home directory"))?;
+            let wallet_path = wallet_dir.join(format!("{}.json", wallet_name));
+            if !wallet_path.exists() {
+                println!(
+                    "\x1b[31mWallet \x1b[38;5;208m'{}'\x1b[31m does not exist in ~/.config/solana/\x1b[0m",
+                    wallet_name
+                );
+                println!("\nYour wallets:");
+                list_wallets()?;
+                return Ok(());
+            }
+            let path_str = wallet_path
+                .to_str()
+                .ok_or_else(|| anyhow!("Invalid wallet path"))?
+                .to_string();
+            (path_str, wallet_name.to_string())
+        }
+        None => {
+            let output = run_solana_command(&["config", "get"])?;
+            let config_output = String::from_utf8_lossy(&output.stdout);
+            let keypair_line = config_output
+                .lines()
+                .find(|line| line.contains("Keypair Path"))
+                .ok_or_else(|| anyhow!("Active wallet not found in config"))?;
+            let keypair_path = keypair_line
+                .split(':')
+                .nth(1)
+                .map(|s| s.trim().to_string())
+                .ok_or_else(|| anyhow!("Failed to parse active wallet from config"))?;
+            let wallet_name = Path::new(&keypair_path)
+                .file_stem()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_else(|| keypair_path.clone());
+            (keypair_path, wallet_name)
+        }
+    };
+
+    // Run the Solana CLI command to retrieve the public key.
+    let output = run_solana_command(&["address", "--keypair", &wallet_path_str])?;
+    if output.status.success() {
+        let public_key = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        println!("Wallet: \x1b[36m'{}'\x1b[0m", wallet_name);
+        println!("Public Key: \x1b[32m{}\x1b[0m", public_key);
+    } else {
+        println!(
+            "\x1b[31mFailed to retrieve public key for wallet \x1b[38;5;208m'{}'\x1b[31m\x1b[0m",
+            wallet_name
+        );
+        println!("Error: {}", String::from_utf8_lossy(&output.stderr));
     }
 
     Ok(())

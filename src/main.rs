@@ -37,6 +37,10 @@ enum Commands {
         #[arg(value_name = "WALLET_NAME")]
         wallet: Option<String>,
     },
+    Pubkey {
+        #[arg(value_name = "WALLET_NAME")]
+        wallet: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -52,6 +56,7 @@ fn main() -> Result<()> {
             new_wallet,
         } => wallet::rename_wallet(&old_wallet, &new_wallet)?,
         Commands::Balance { wallet } => wallet::get_balance(wallet.as_deref())?,
+        Commands::Pubkey { wallet } => wallet::get_public_key(wallet.as_deref())?,
     }
 
     Ok(())
