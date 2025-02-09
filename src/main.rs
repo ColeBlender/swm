@@ -42,7 +42,7 @@ enum Commands {
         wallet: Option<String>,
     },
 }
-//
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
