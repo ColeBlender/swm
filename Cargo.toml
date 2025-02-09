@@ -12,9 +12,6 @@ homepage = "https://github.com/ColeBlender/swm"
 keywords = ["cli", "rust", "solana", "wallet", "web3"]
 categories = ["command-line-utilities", "cryptography", "finance", "network-programming", "development-tools"]
 
-[release]
-execute = true
-
 [dependencies]
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
